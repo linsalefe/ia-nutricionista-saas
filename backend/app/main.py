@@ -4,6 +4,11 @@ from app.endpoints.chat import router as chat_router
 from app.endpoints.image import router as image_router
 from app.endpoints.meal import router as meal_router
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
+# Carregar variáveis do arquivo .env
+load_dotenv()
 
 app = FastAPI(
     title="IA Nutricionista SaaS",
@@ -13,7 +18,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # ou ["http://localhost:5173"] para permitir só seu front
+    allow_origins=["*"],  # ou ["http://localhost:5173"]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

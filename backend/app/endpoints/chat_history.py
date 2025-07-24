@@ -6,27 +6,14 @@ from tinydb import TinyDB, Query
 from app.auth import SECRET_KEY, ALGORITHM
 import os
 from datetime import datetime
-from dotenv import load_dotenv
 
-# IA (LangChain/OpenAI)
-from langchain_openai import ChatOpenAI
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-
-load_dotenv()  # Garante carregar variáveis do .env
-
-router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/login")
-
-# Caminho do banco de dados do chat (ajuste se necessário)
+router = APIRouter()
 DB_PATH = os.path.join(os.path.dirname(__file__), '../../chat_db.json')
 db = TinyDB(DB_PATH)
 UserQ = Query()
 
-class ChatMessage(BaseModel):
-    message: str
-
-class ChatMsgHist(BaseModel):
+class ChatMsg(BaseModel):
     role: str  # "user" ou "bot"
     text: str
     type: str = "text"
@@ -47,43 +34,6 @@ def get_current_username(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
 
-user_memories = {}
-
-@router.post("/send")
-def chat_with_ia(msg: ChatMessage, username: str = Depends(get_current_username)):
-    if username not in user_memories:
-        user_memories[username] = ConversationBufferMemory()
-
-    llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=os.getenv("OPENAI_API_KEY"))
-    chain = ConversationChain(llm=llm, memory=user_memories[username])
-    prompt = f"Responda sempre em português do Brasil, de forma clara, simples e educativa: {msg.message}"
-
-    try:
-        resposta = chain.predict(input=prompt)
-    except Exception as e:
-        resposta = "Erro ao consultar a IA."
-
-    now = datetime.now().isoformat()
-    user_data = db.get(UserQ.username == username)
-    if not user_data:
-        user_data = {"username": username, "chat": []}
-
-    user_data["chat"].append({
-        "role": "user",
-        "text": msg.message,
-        "type": "text",
-        "created_at": now
-    })
-    user_data["chat"].append({
-        "role": "bot",
-        "text": resposta,
-        "type": "text",
-        "created_at": now
-    })
-
-    db.upsert(user_data, UserQ.username == username)
-    return {"response": resposta}
-
 @router.get("/history")
 def get_chat_history(username: str = Depends(get_current_username)):
     user_data = db.get(UserQ.username == username)
@@ -92,7 +42,7 @@ def get_chat_history(username: str = Depends(get_current_username)):
     return user_data["chat"]
 
 @router.post("/save")
-def save_chat_message(msg: ChatMsgHist, username: str = Depends(get_current_username)):
+def save_chat_message(msg: ChatMsg, username: str = Depends(get_current_username)):
     if not msg.created_at:
         msg.created_at = datetime.now().isoformat()
     user_data = db.get(UserQ.username == username)

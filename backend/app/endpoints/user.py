@@ -5,6 +5,7 @@ from app.models import UserCreate, UserLogin
 from app.db import salvar_usuario, buscar_usuario
 from app.auth import hash_password, verify_password, create_access_token
 
+
 router = APIRouter()
 
 @router.post("/signup")
