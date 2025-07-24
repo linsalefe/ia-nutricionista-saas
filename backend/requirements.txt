@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+Pillow
+openai
+python-dotenv
+# Adicione a seguir se for usar TinyDB no início
+tinydb
+# Para autenticação JWT (passo 2)
+python-jose[cryptography]
+passlib[bcrypt]
