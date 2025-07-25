@@ -1,105 +1,90 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, JWTError
-from pydantic import BaseModel
-from tinydb import TinyDB, Query
-from app.auth import SECRET_KEY, ALGORITHM
-import os
+# app/endpoints/user.py
+
+from fastapi import APIRouter, HTTPException, status, Depends
 from datetime import datetime
-from dotenv import load_dotenv
+from pydantic import BaseModel
+from typing import Optional
 
-# IA (LangChain/OpenAI)
-from langchain_openai import ChatOpenAI
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-
-load_dotenv()  # Garante carregar variáveis do .env
+from app.models import UserCreate, UserLogin, UserDB, WeightLog
+from app.db import salvar_usuario, buscar_usuario
+from app.auth import hash_password, verify_password, create_access_token, get_current_user
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/login")
 
-# Caminho do banco de dados do chat (ajuste se necessário)
-DB_PATH = os.path.join(os.path.dirname(__file__), '../../chat_db.json')
-db = TinyDB(DB_PATH)
-UserQ = Query()
+# --- Pydantic schema para atualização de perfil ---
+class UserUpdate(BaseModel):
+    nome: Optional[str] = None
+    objetivo: Optional[str] = None
+    height_cm: Optional[float] = None
+    current_weight: Optional[float] = None
 
-class ChatMessage(BaseModel):
-    message: str
 
-class ChatMsgHist(BaseModel):
-    role: str  # "user" ou "bot"
-    text: str
-    type: str = "text"
-    created_at: str = None
+@router.post("/signup", status_code=status.HTTP_201_CREATED)
+def signup(user: UserCreate):
+    if buscar_usuario(user.username):
+        raise HTTPException(status_code=400, detail="Usuário já existe")
 
-def get_current_username(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Token inválido ou expirado",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        return username
-    except JWTError:
-        raise credentials_exception
+    # Monta usuário com campos do questionário inicial
+    usuario = {
+        "username": user.username,
+        "nome": user.nome,
+        "objetivo": user.objetivo,
+        "height_cm": user.height_cm,
+        "initial_weight": user.initial_weight,
+        "password": hash_password(user.password),
+        "weight_logs": [],
+        "refeicoes": [],
+    }
+    # Se forneceu peso inicial, registra primeiro log
+    if user.initial_weight is not None:
+        usuario["weight_logs"].append({
+            "weight": user.initial_weight,
+            "recorded_at": datetime.utcnow().isoformat()
+        })
 
-user_memories = {}
+    salvar_usuario(usuario)
+    return {"msg": "Usuário criado com sucesso"}
 
-@router.post("/send")
-def chat_with_ia(msg: ChatMessage, username: str = Depends(get_current_username)):
-    if username not in user_memories:
-        user_memories[username] = ConversationBufferMemory()
 
-    llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key=os.getenv("OPENAI_API_KEY"))
-    chain = ConversationChain(llm=llm, memory=user_memories[username])
-    prompt = f"Responda sempre em português do Brasil, de forma clara, simples e educativa: {msg.message}"
+@router.post("/login")
+def login(login_data: UserLogin):
+    usuario = buscar_usuario(login_data.username)
+    if not usuario or not verify_password(login_data.password, usuario['password']):
+        raise HTTPException(status_code=401, detail="Usuário ou senha inválidos")
+    token = create_access_token({"sub": usuario['username']})
+    return {"access_token": token, "token_type": "bearer"}
 
-    try:
-        resposta = chain.predict(input=prompt)
-    except Exception as e:
-        resposta = "Erro ao consultar a IA."
 
-    now = datetime.now().isoformat()
-    user_data = db.get(UserQ.username == username)
-    if not user_data:
-        user_data = {"username": username, "chat": []}
+@router.get("/me", response_model=UserDB)
+def read_profile(current_user: dict = Depends(get_current_user)):
+    # Retorna dados do usuário, incluindo weight_logs
+    return current_user
 
-    user_data["chat"].append({
-        "role": "user",
-        "text": msg.message,
-        "type": "text",
-        "created_at": now
-    })
-    user_data["chat"].append({
-        "role": "bot",
-        "text": resposta,
-        "type": "text",
-        "created_at": now
-    })
 
-    db.upsert(user_data, UserQ.username == username)
-    return {"response": resposta}
+@router.put("/me", response_model=UserDB)
+def update_profile(
+    update: UserUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    # Busca usuário atual do DB
+    usuario = buscar_usuario(current_user['username'])
 
-@router.get("/history")
-def get_chat_history(username: str = Depends(get_current_username)):
-    user_data = db.get(UserQ.username == username)
-    if not user_data or "chat" not in user_data:
-        return []
-    return user_data["chat"]
+    # Atualiza campos permitidos
+    if update.nome is not None:
+        usuario['nome'] = update.nome
+    if update.objetivo is not None:
+        usuario['objetivo'] = update.objetivo
+    if update.height_cm is not None:
+        usuario['height_cm'] = update.height_cm
 
-@router.post("/save")
-def save_chat_message(msg: ChatMsgHist, username: str = Depends(get_current_username)):
-    if not msg.created_at:
-        msg.created_at = datetime.now().isoformat()
-    user_data = db.get(UserQ.username == username)
-    if not user_data:
-        user_data = {"username": username, "chat": []}
-    if "chat" not in user_data:
-        user_data["chat"] = []
-    user_data["chat"].append(msg.dict())
-    db.upsert(user_data, UserQ.username == username)
-    return {"ok": True}
+    # Se veio peso atual, cria novo WeightLog
+    if update.current_weight is not None:
+        log: WeightLog = {
+            'weight': update.current_weight,
+            'recorded_at': datetime.utcnow().isoformat()
+        }
+        usuario.setdefault('weight_logs', []).append(log)
+
+    # Salva alterações
+    salvar_usuario(usuario)
+    return usuario

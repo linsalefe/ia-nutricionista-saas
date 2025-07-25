@@ -1,45 +1,101 @@
-import { createTheme } from '@mui/material/styles';
+// src/theme/theme.ts
+import { createTheme, responsiveFontSizes } from '@mui/material/styles';
+import '@fontsource/poppins/300.css';
+import '@fontsource/poppins/400.css';
+import '@fontsource/poppins/600.css';
+import '@fontsource/poppins/700.css';
 
-export const getTheme = (mode: 'light' | 'dark') =>
-  createTheme({
+export const getTheme = (mode: 'light' | 'dark') => {
+  let theme = createTheme({
     palette: {
       mode,
-      primary: { main: '#4F46E5' },
-      secondary: { main: '#06B6D4' },
-      success: { main: '#22C55E' },
-      error: { main: '#EF4444' },
-      background: {
-        default: mode === 'light' ? '#F3F4F6' : '#111827',
-        paper: mode === 'light' ? '#FFFFFF' : '#1E293B',
+      primary: {
+        light: '#8CE8F4',
+        main: '#2AB7CA',
+        dark: '#1B8A92',
+        contrastText: '#FFFFFF',
       },
-      grey: {
-        100: '#F3F4F6',
-        200: '#E5E7EB',
-        400: '#9CA3AF',
-        900: '#111827',
+      secondary: {
+        light: '#B47BE0',
+        main: '#8E44AD',
+        dark: '#5F2D7A',
+        contrastText: '#FFFFFF',
+      },
+      background: {
+        default: mode === 'light' ? '#F5F7FA' : '#1A202C',
+        paper: mode === 'light' ? '#FFFFFF' : '#2D3748',
+      },
+      text: {
+        primary: mode === 'light' ? '#2E3A59' : '#E2E8F0',
+        secondary: mode === 'light' ? '#677294' : '#A0AEC0',
       },
     },
     typography: {
-      fontFamily: 'Inter, Roboto, Arial, sans-serif',
-      h1: { fontWeight: 700, fontSize: '2.5rem' },
-      h2: { fontWeight: 700, fontSize: '2rem' },
-      h3: { fontWeight: 700 },
-      body1: { fontSize: '1rem' },
-      body2: { fontSize: '0.875rem' },
-      button: { textTransform: 'none', fontWeight: 600 },
+      fontFamily: [
+        'Poppins',
+        '-apple-system',
+        'BlinkMacSystemFont',
+        '"Segoe UI"',
+        'Roboto',
+        '"Helvetica Neue"',
+        'Arial',
+        'sans-serif',
+      ].join(','),
+      h4: {
+        fontWeight: 700,
+        fontSize: '2rem',
+        lineHeight: 1.3,
+      },
+      h6: {
+        fontWeight: 600,
+        fontSize: '1.125rem',
+        lineHeight: 1.4,
+      },
+      button: {
+        textTransform: 'none',
+        fontWeight: 600,
+      },
     },
     shape: {
       borderRadius: 16,
     },
+    shadows: [
+      'none',
+      '0px 4px 12px rgba(0,0,0,0.05)',     // 1
+      '0px 8px 24px rgba(0,0,0,0.08)',     // 2
+      ...Array(23).fill('none'),
+    ],
     components: {
-      MuiButton: {
-        styleOverrides: { root: { borderRadius: 16, boxShadow: 'none' } },
+      MuiCssBaseline: {
+        styleOverrides: `
+          body {
+            margin: 0;
+            background: ${
+              mode === 'light'
+                ? 'linear-gradient(180deg, #F5F7FA 0%, #E2E8F0 100%)'
+                : 'linear-gradient(180deg, #2D3748 0%, #1A202C 100%)'
+            };
+          }
+        `,
       },
       MuiCard: {
-        styleOverrides: { root: { borderRadius: 16, boxShadow: '0 4px 24px 0 rgba(0,0,0,0.05)' } },
+        styleOverrides: {
+          root: {
+            borderRadius: 16,
+            boxShadow: '0px 4px 12px rgba(0,0,0,0.05)',
+          },
+        },
       },
-      MuiPaper: {
-        styleOverrides: { root: { borderRadius: 16 } },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+          },
+        },
       },
     },
   });
+
+  theme = responsiveFontSizes(theme);
+  return theme;
+};

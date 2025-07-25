@@ -1,9 +1,20 @@
-import { AppBar, Toolbar, Typography, Button, Box, Menu, MenuItem, Snackbar, Alert } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  IconButton,
+  Button,
+  Menu,
+  MenuItem,
+  Snackbar,
+  Alert
+} from '@mui/material';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../contexts/ThemeModeContext';
 import { useState } from 'react';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 
 export default function Header() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -16,62 +27,64 @@ export default function Header() {
   const handleClose = () => setAnchorEl(null);
 
   const handleLogout = () => {
-    // Limpa storage, histórico, feedback
     localStorage.removeItem('token');
     sessionStorage.clear();
     setSnackbar({ open: true, message: 'Logout realizado!', severity: 'success' });
     setTimeout(() => {
       handleClose();
       navigate('/login');
-      window.location.reload(); // limpa contextos react (opcional, mas reforça)
+      window.location.reload();
     }, 1000);
   };
 
   return (
-    <AppBar position="fixed" color="default" elevation={1} sx={{ bgcolor: 'background.paper' }}>
-      <Toolbar>
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6" fontWeight={700} color="primary" sx={{ textDecoration: 'none' }}>
-            IA Nutricionista
+    <>
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          bgcolor: '#fff',
+          color: 'text.primary',
+          zIndex: 1201,
+          borderBottom: '1px solid #e0e0e0',
+        }}
+      >
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 } }}>
+          <Typography variant="h6" fontWeight={600}>
+            Painel
           </Typography>
-        </Box>
-        <Button
-          onClick={toggleMode}
-          color="inherit"
-          sx={{ mr: 1, minWidth: 0, px: 1 }}
-          aria-label="Alternar modo claro/escuro"
-        >
-          {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-        </Button>
-        {!token ? (
-          <>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ ml: 2, px: 4, borderRadius: 2 }}
-              onClick={handleClick}
-            >
-              Login/Cadastrar
-            </Button>
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-              <MenuItem component={RouterLink} to="/login" onClick={handleClose}>Login</MenuItem>
-              <MenuItem component={RouterLink} to="/signup" onClick={handleClose}>Cadastro</MenuItem>
-            </Menu>
-          </>
-        ) : (
-          <Button
-            variant="outlined"
-            color="primary"
-            sx={{ ml: 2, px: 4, borderRadius: 2 }}
-            onClick={handleLogout}
-          >
-            Sair
-          </Button>
-        )}
-      </Toolbar>
+
+          <Box display="flex" alignItems="center">
+            <IconButton onClick={toggleMode} sx={{ mr: 1 }}>
+              {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+            </IconButton>
+
+            {!token ? (
+              <>
+                <Button variant="contained" onClick={handleClick}>
+                  Login/Cadastrar
+                </Button>
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                  <MenuItem component={RouterLink} to="/login" onClick={handleClose}>
+                    Login
+                  </MenuItem>
+                  <MenuItem component={RouterLink} to="/signup" onClick={handleClose}>
+                    Cadastro
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <Button variant="outlined" color="primary" onClick={handleLogout}>
+                Sair
+              </Button>
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
+
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={1200}
+        autoHideDuration={2000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
@@ -79,6 +92,6 @@ export default function Header() {
           {snackbar.message}
         </Alert>
       </Snackbar>
-    </AppBar>
+    </>
   );
 }

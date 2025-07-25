@@ -1,13 +1,24 @@
+// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
+import axios from 'axios';
+import App from './App';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { getTheme } from './theme/theme';
 import { ThemeModeProvider, useThemeMode } from './contexts/ThemeModeContext';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/700.css';
-import './index.css';
 import { LoadingProvider } from './contexts/LoadingContext';
+
+// Fontes
+import '@fontsource/poppins/300.css';
+import '@fontsource/poppins/400.css';
+import '@fontsource/poppins/600.css';
+import '@fontsource/poppins/700.css';
+
+// Reset básico
+import './index.css';
+
+// Aponta todas as chamadas axios para o backend
+axios.defaults.baseURL = 'http://localhost:8000';
 
 function ThemedApp() {
   const { mode } = useThemeMode();
@@ -20,9 +31,9 @@ function ThemedApp() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-<ThemeModeProvider>
-  <LoadingProvider>
-    <ThemedApp />
-  </LoadingProvider>
-</ThemeModeProvider>
+  <ThemeModeProvider>
+    <LoadingProvider>
+      <ThemedApp />
+    </LoadingProvider>
+  </ThemeModeProvider>
 );
