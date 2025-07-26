@@ -99,13 +99,11 @@ export default function DashboardPage() {
     setLoadingAction(true);
     try {
       const token = localStorage.getItem('token')!;
-      // 1) atualiza altura
       await axios.patch(
         '/api/user',
         { height_cm: height },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // 2) registra peso
       await axios.post(
         '/api/weight-logs',
         { weight },
@@ -163,10 +161,22 @@ export default function DashboardPage() {
           <Typography variant="body1" color="text.secondary">
             Você ainda não registrou nenhum peso.
           </Typography>
-          <Button variant="contained" onClick={handleOpenDialog} sx={{ mt: 2 }}>
+          <Button
+            variant="contained"
+            onClick={handleOpenDialog}
+            sx={{
+              mt: 2,
+              py: 1.5,
+              fontSize: '1.1rem',
+              bgcolor: 'primary.dark',
+              '&:hover': { bgcolor: 'primary.main' },
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            }}
+          >
             Registrar Peso e Altura
           </Button>
         </Box>
+
         {/* Modal de registro */}
         <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="xs">
           <DialogTitle>Registrar Peso e Altura</DialogTitle>
@@ -175,6 +185,7 @@ export default function DashboardPage() {
               autoFocus
               margin="dense"
               label="Peso (kg)"
+              type="text"
               fullWidth
               variant="outlined"
               value={newWeight}
@@ -184,6 +195,7 @@ export default function DashboardPage() {
             <TextField
               margin="dense"
               label="Altura (cm)"
+              type="text"
               fullWidth
               variant="outlined"
               value={newHeight}
@@ -197,7 +209,7 @@ export default function DashboardPage() {
               Cancelar
             </Button>
             <Button onClick={handleConfirm} disabled={loadingAction} variant="contained">
-              {loadingAction ? <CircularProgress size={20} /> : ' Ok '}
+              {loadingAction ? <CircularProgress size={20} /> : 'Ok'}
             </Button>
           </DialogActions>
         </Dialog>
@@ -212,7 +224,17 @@ export default function DashboardPage() {
         <Typography variant="h5" fontWeight={600}>
           Olá, {userName} 👋
         </Typography>
-        <Button variant="contained" onClick={handleOpenDialog}>
+        <Button
+          variant="contained"
+          onClick={handleOpenDialog}
+          sx={{
+            py: 1.5,
+            fontSize: '1.1rem',
+            bgcolor: 'primary.dark',
+            '&:hover': { bgcolor: 'primary.main' },
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          }}
+        >
           Registrar Peso/Altura
         </Button>
       </Box>
@@ -223,7 +245,12 @@ export default function DashboardPage() {
 
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard icon={<FitnessCenterIcon />} label="Objetivo" value={metrics.objective || '-'} />
+          <StatsCard
+            icon={<FitnessCenterIcon />}
+            label="Objetivo"
+            value={metrics.objective || '-'}
+            highlight
+          />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard icon={<HeightIcon />} label="Altura" value={`${metrics.height_cm ?? '-'} cm`} />
@@ -250,41 +277,6 @@ export default function DashboardPage() {
           </Typography>
         </Grid>
       </Grid>
-
-      {/* Modal de registro */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="xs">
-        <DialogTitle>Registrar Peso e Altura</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Peso (kg)"
-            fullWidth
-            variant="outlined"
-            value={newWeight}
-            onChange={(e) => setNewWeight(e.target.value)}
-            helperText="Use ponto ou vírgula"
-          />
-          <TextField
-            margin="dense"
-            label="Altura (cm)"
-            fullWidth
-            variant="outlined"
-            value={newHeight}
-            onChange={(e) => setNewHeight(e.target.value)}
-            helperText="Ex.: 170"
-            sx={{ mt: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} disabled={loadingAction}>
-            Cancelar
-          </Button>
-          <Button onClick={handleConfirm} disabled={loadingAction} variant="contained">
-            {loadingAction ? <CircularProgress size={20} /> : ' Ok '}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

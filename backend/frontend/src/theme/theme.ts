@@ -5,91 +5,70 @@ import '@fontsource/poppins/400.css';
 import '@fontsource/poppins/600.css';
 import '@fontsource/poppins/700.css';
 
+const greenPalette = {
+  primary: {
+    light: '#A8D5BA',     // verde pastel claro
+    main:  '#7AA374',     // verde médio
+    dark:  '#4D7C59',     // verde escuro
+    contrastText: '#FFF', // texto branco
+  },
+  background: {
+    default: '#FFFFFF',   // fundo branco
+    paper:   '#F7F9F7',   // cards um pouquinho esverdeados
+  },
+  text: {
+    primary:   '#2E4F2E', // tom escuro de verde para textos principais
+    secondary: '#4F7F4F', // verde mais suave para textos secundários
+  },
+  divider: '#E0EAE0',     // linha de divisão suave
+};
+
 export const getTheme = (mode: 'light' | 'dark') => {
   let theme = createTheme({
     palette: {
       mode,
-      primary: {
-        light: '#8CE8F4',
-        main: '#2AB7CA',
-        dark: '#1B8A92',
-        contrastText: '#FFFFFF',
-      },
-      secondary: {
-        light: '#B47BE0',
-        main: '#8E44AD',
-        dark: '#5F2D7A',
-        contrastText: '#FFFFFF',
-      },
+      ...greenPalette,
       background: {
-        default: mode === 'light' ? '#F5F7FA' : '#1A202C',
-        paper: mode === 'light' ? '#FFFFFF' : '#2D3748',
-      },
-      text: {
-        primary: mode === 'light' ? '#2E3A59' : '#E2E8F0',
-        secondary: mode === 'light' ? '#677294' : '#A0AEC0',
+        default: greenPalette.background.default,
+        paper:   greenPalette.background.paper,
       },
     },
     typography: {
-      fontFamily: [
-        'Poppins',
-        '-apple-system',
-        'BlinkMacSystemFont',
-        '"Segoe UI"',
-        'Roboto',
-        '"Helvetica Neue"',
-        'Arial',
-        'sans-serif',
-      ].join(','),
-      h4: {
-        fontWeight: 700,
-        fontSize: '2rem',
-        lineHeight: 1.3,
-      },
-      h6: {
-        fontWeight: 600,
-        fontSize: '1.125rem',
-        lineHeight: 1.4,
-      },
-      button: {
-        textTransform: 'none',
-        fontWeight: 600,
-      },
+      fontFamily: ['Poppins', 'sans-serif'].join(','),
+      h4: { fontWeight: 700 },
+      h5: { fontWeight: 600 },
+      h6: { fontWeight: 600 },
     },
     shape: {
-      borderRadius: 16,
+      borderRadius: 12,
     },
-    shadows: [
-      'none',
-      '0px 4px 12px rgba(0,0,0,0.05)',     // 1
-      '0px 8px 24px rgba(0,0,0,0.08)',     // 2
-      ...Array(23).fill('none'),
-    ],
     components: {
       MuiCssBaseline: {
         styleOverrides: `
           body {
-            margin: 0;
-            background: ${
-              mode === 'light'
-                ? 'linear-gradient(180deg, #F5F7FA 0%, #E2E8F0 100%)'
-                : 'linear-gradient(180deg, #2D3748 0%, #1A202C 100%)'
-            };
+            background: ${greenPalette.background.default};
           }
         `,
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
+            borderRadius: 8,
+            backgroundColor: greenPalette.primary.main,
+            color: greenPalette.primary.contrastText,
+            '&:hover': {
+              backgroundColor: greenPalette.primary.dark,
+            },
+          },
+        },
       },
       MuiCard: {
         styleOverrides: {
           root: {
             borderRadius: 16,
-            boxShadow: '0px 4px 12px rgba(0,0,0,0.05)',
-          },
-        },
-      },
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            borderRadius: 8,
+            backgroundColor: greenPalette.background.paper,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
           },
         },
       },

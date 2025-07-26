@@ -1,83 +1,106 @@
+// src/components/Sidebar.tsx
+import React from 'react';
 import {
-  Drawer,
+  Box,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  useMediaQuery,
-  Box,
-  Typography
+  Divider,
+  Typography,
+  useTheme,
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListIcon from '@mui/icons-material/List';
 import ChatIcon from '@mui/icons-material/Chat';
-import SettingsIcon from '@mui/icons-material/Settings';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import { Link, useLocation } from 'react-router-dom';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { NavLink, useLocation } from 'react-router-dom';
 
-const drawerWidth = 240;
-
-const menuItems = [
-  { label: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-  { label: 'Listagem', icon: <ListIcon />, path: '/list' },
-  { label: 'Chat', icon: <ChatIcon />, path: '/chat' },
-  { label: 'Análise de Imagem', icon: <PhotoCameraIcon />, path: '/image' },
-  { label: 'Configurações', icon: <SettingsIcon />, path: '/settings' },
+const navItems = [
+  { to: '/',          label: 'Dashboard',         icon: <DashboardIcon /> },
+  { to: '/list',      label: 'Listagem',          icon: <ListIcon /> },
+  { to: '/chat',      label: 'Chat',              icon: <ChatIcon /> },
+  { to: '/image',     label: 'Análise de Imagem', icon: <PhotoCameraIcon /> },
+  { to: '/settings',  label: 'Configurações',     icon: <SettingsIcon /> },
 ];
 
 export default function Sidebar() {
-  const isMobile = useMediaQuery('(max-width:900px)');
-  const location = useLocation();
+  const theme = useTheme();
+  const { pathname } = useLocation();
 
   return (
-    <Drawer
-      variant={isMobile ? 'temporary' : 'permanent'}
-      open
+    <Box
+      component="nav"
       sx={{
-        width: drawerWidth,
+        width: 240,
         flexShrink: 0,
-        [`& .MuiDrawer-paper`]: {
-          width: drawerWidth,
-          boxSizing: 'border-box',
-          bgcolor: '#1e293b',
-          color: '#fff',
-          borderRight: 0,
-        },
+        bgcolor: theme.palette.primary.dark,
+        color: theme.palette.primary.contrastText,
+        display: 'flex',
+        flexDirection: 'column',
+        pt: 2,
       }}
     >
-      <Box sx={{ p: 2 }}>
-        <Typography variant="h6" fontWeight={700} color="white">
-          IA Nutricionista
+      {/* Título do SaaS */}
+      <Box sx={{ px: 2, mb: 2 }}>
+        <Typography variant="h6" sx={{ color: 'inherit', fontWeight: 700 }}>
+          NutriFlow
         </Typography>
       </Box>
 
-      <List>
-        {menuItems.map((item) => {
-          const active = location.pathname === item.path;
-          return (
-            <ListItemButton
-              key={item.label}
-              component={Link}
-              to={item.path}
-              selected={active}
-              sx={{
-                mx: 1,
-                mb: 1,
-                borderRadius: 2,
-                color: '#fff',
-                bgcolor: active ? 'primary.main' : 'transparent',
-                '&:hover': {
-                  bgcolor: 'primary.main',
-                  color: '#fff',
-                },
-              }}
-            >
-              <ListItemIcon sx={{ color: '#fff' }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          );
-        })}
+      <Divider sx={{ bgcolor: theme.palette.primary.light }} />
+
+      {/* Links de navegação */}
+      <List sx={{ flexGrow: 1, mt: 1 }}>
+        {navItems.map(({ to, label, icon }) => (
+          <ListItemButton
+            key={to}
+            component={NavLink}
+            to={to}
+            sx={{
+              mb: 0.5,
+              mx: 1,
+              borderRadius: 1.5,
+              '&.active, &:hover': {
+                bgcolor: theme.palette.primary.main,
+              },
+              color: theme.palette.primary.contrastText,
+              ...(pathname === to && {
+                bgcolor: theme.palette.primary.main,
+              }),
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+              {icon}
+            </ListItemIcon>
+            <ListItemText primary={label} />
+          </ListItemButton>
+        ))}
       </List>
-    </Drawer>
+
+      <Divider sx={{ bgcolor: theme.palette.primary.light, my: 1 }} />
+
+      {/* Botão de sair */}
+      <Box sx={{ px: 1 }}>
+        <ListItemButton
+          onClick={() => {
+            localStorage.removeItem('token');
+            window.location.reload();
+          }}
+          sx={{
+            mx: 1,
+            borderRadius: 1.5,
+            '&:hover': { bgcolor: theme.palette.primary.main },
+            color: theme.palette.primary.contrastText,
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
+            <SettingsIcon />
+          </ListItemIcon>
+          <ListItemText primary="Sair" />
+        </ListItemButton>
+      </Box>
+    </Box>
   );
 }
