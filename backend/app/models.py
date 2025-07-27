@@ -36,4 +36,5 @@ class UserDB(BaseModel):
     refeicoes: Optional[List[dict]] = []
 
     class Config:
-        orm_mode = True
+        # Pydantic V2: permitir criação a partir de atributos ORM
+        from_attributes = True

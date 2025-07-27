@@ -1,28 +1,29 @@
 // src/App.tsx
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { getTheme } from './theme/theme';
-import MainLayout from './layouts/MainLayout';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import { getTheme } from './theme/theme';
 import WelcomePage from './pages/WelcomePage';
-import DashboardPage from './pages/DashboardPage';
-import ListPage from './pages/ListPage';
-import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import ChatPage from './pages/ChatPage';
+
+import PrivateRoute from './components/PrivateRoute';
+import MainLayout from './layouts/MainLayout';
+
+import DashboardPage from './pages/DashboardPage';
 import ImageAnalysisPage from './pages/ImageAnalysisPage';
 import MealDetailPage from './pages/MealDetailPage';
+import ListPage from './pages/ListPage';
+import ChatPage from './pages/ChatPage';
+import SettingsPage from './pages/SettingsPage';
 import Error404Page from './pages/Error404Page';
-import PrivateRoute from './components/PrivateRoute';
 
 function App() {
-  const [mode, setMode] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light';
-  });
+  const [mode, setMode] = useState<'light' | 'dark'>(() =>
+    (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light'
+  );
 
-  // Persistir escolha de tema
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
   }, [mode]);
@@ -37,11 +38,11 @@ function App() {
           {/* Onboarding */}
           <Route path="/welcome" element={<WelcomePage />} />
 
-          {/* Rotas públicas */}
+          {/* Autenticação */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
 
-          {/* Rotas privadas */}
+          {/* App protegido */}
           <Route
             path="/*"
             element={
@@ -53,13 +54,16 @@ function App() {
                   }
                 >
                   <Routes>
+                    {/* Rota principal do SaaS */}
                     <Route path="/" element={<DashboardPage />} />
-                    <Route path="/image" element={<ImageAnalysisPage />} />
-                    <Route path="/meal/:id" element={<MealDetailPage />} />
-                    <Route path="/list" element={<ListPage />} />
-                    <Route path="/chat" element={<ChatPage />} />
+
+                    {/* Demais páginas internas */}
+                    <Route path="image" element={<ImageAnalysisPage />} />
+                    <Route path="meal/:id" element={<MealDetailPage />} />
+                    <Route path="list" element={<ListPage />} />
+                    <Route path="chat" element={<ChatPage />} />
                     <Route
-                      path="/settings"
+                      path="settings"
                       element={
                         <SettingsPage
                           mode={mode}
