@@ -1,7 +1,4 @@
-// src/pages/DashboardPage.tsx
-
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import {
   Box,
   Typography,
@@ -21,6 +18,7 @@ import HeightIcon from '@mui/icons-material/Height';
 import FlagIcon from '@mui/icons-material/Flag';
 import ScaleIcon from '@mui/icons-material/Scale';
 
+import api from '../services/api';
 import StatsCard from '../components/StatsCard';
 import ChartCard from '../components/ChartCard';
 import ProgressCard from '../components/ProgressCard';
@@ -52,7 +50,7 @@ export default function DashboardPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Extrai nome do usuário do JWT
+  // Extrai nome do JWT
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -67,11 +65,9 @@ export default function DashboardPage() {
   const fetchMetrics = async (p: string) => {
     setLoadingAction(true);
     try {
-      const token = localStorage.getItem('token');
-      const url = `/api/dashboard/metrics${p ? `?period=${p}` : ''}`;
-      const { data } = await axios.get<DashboardMetrics>(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Remove '/api' pois já é baseURL
+      const url = `/dashboard/metrics${p ? `?period=${p}` : ''}`;
+      const { data } = await api.get<DashboardMetrics>(url);
       setMetrics(data);
     } catch (err) {
       console.error(err);
@@ -93,22 +89,14 @@ export default function DashboardPage() {
   const handleConfirm = async () => {
     const weight = parseFloat(newWeight.replace(',', '.'));
     const height = parseFloat(newHeight.replace(',', '.'));
-    if (isNaN(weight) || weight <= 0 || isNaN(height) || height <= 0) {
-      return;
-    }
+    if (isNaN(weight) || weight <= 0 || isNaN(height) || height <= 0) return;
+
     setLoadingAction(true);
     try {
-      const token = localStorage.getItem('token')!;
-      await axios.patch(
-        '/api/user',
-        { height_cm: height },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      await axios.post(
-        '/api/weight-logs',
-        { weight },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // 1) Atualiza altura no perfil
+      await api.patch('/user', { height_cm: height });
+      // 2) Registra novo peso
+      await api.post('/weight-logs', { weight });
       setDialogOpen(false);
       fetchMetrics(period);
     } catch (err) {
@@ -118,7 +106,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Spinner enquanto carrega métricas
+  // Loading inicial
   if (!metrics) {
     return (
       <Box
@@ -136,7 +124,7 @@ export default function DashboardPage() {
 
   const history = metrics.history || [];
 
-  // Cálculo de classificação de IMC
+  // IMC e classificação
   const bmiValue = metrics.bmi ?? 0;
   const classification =
     bmiValue < 18.5
@@ -147,7 +135,7 @@ export default function DashboardPage() {
       ? 'Sobrepeso'
       : 'Obesidade';
 
-  // Empty state (sem histórico)
+  // Empty state
   if (history.length === 0 && !loadingAction) {
     return (
       <Box sx={{ px: isMobile ? 2 : 6, py: isMobile ? 3 : 6 }}>
@@ -161,23 +149,12 @@ export default function DashboardPage() {
           <Typography variant="body1" color="text.secondary">
             Você ainda não registrou nenhum peso.
           </Typography>
-          <Button
-            variant="contained"
-            onClick={handleOpenDialog}
-            sx={{
-              mt: 2,
-              py: 1.5,
-              fontSize: '1.1rem',
-              bgcolor: 'primary.dark',
-              '&:hover': { bgcolor: 'primary.main' },
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-            }}
-          >
+          <Button variant="contained" onClick={handleOpenDialog} sx={{ mt: 2 }}>
             Registrar Peso e Altura
           </Button>
         </Box>
 
-        {/* Modal de registro */}
+        {/* Modal */}
         <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="xs">
           <DialogTitle>Registrar Peso e Altura</DialogTitle>
           <DialogContent>
@@ -185,9 +162,7 @@ export default function DashboardPage() {
               autoFocus
               margin="dense"
               label="Peso (kg)"
-              type="text"
               fullWidth
-              variant="outlined"
               value={newWeight}
               onChange={(e) => setNewWeight(e.target.value)}
               helperText="Use ponto ou vírgula"
@@ -195,9 +170,7 @@ export default function DashboardPage() {
             <TextField
               margin="dense"
               label="Altura (cm)"
-              type="text"
               fullWidth
-              variant="outlined"
               value={newHeight}
               onChange={(e) => setNewHeight(e.target.value)}
               helperText="Ex.: 170"
@@ -224,17 +197,7 @@ export default function DashboardPage() {
         <Typography variant="h5" fontWeight={600}>
           Olá, {userName} 👋
         </Typography>
-        <Button
-          variant="contained"
-          onClick={handleOpenDialog}
-          sx={{
-            py: 1.5,
-            fontSize: '1.1rem',
-            bgcolor: 'primary.dark',
-            '&:hover': { bgcolor: 'primary.main' },
-            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-          }}
-        >
+        <Button variant="contained" onClick={handleOpenDialog}>
           Registrar Peso/Altura
         </Button>
       </Box>
@@ -244,7 +207,7 @@ export default function DashboardPage() {
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item>
           <StatsCard
             icon={<FitnessCenterIcon />}
             label="Objetivo"
@@ -252,18 +215,34 @@ export default function DashboardPage() {
             highlight
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard icon={<HeightIcon />} label="Altura" value={`${metrics.height_cm ?? '-'} cm`} />
+        <Grid item>
+          <StatsCard
+            icon={<HeightIcon />}
+            label="Altura"
+            value={`${metrics.height_cm ?? '-'} cm`}
+          />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard icon={<FlagIcon />} label="Peso Inicial" value={`${metrics.initial_weight ?? '-'} kg`} />
+        <Grid item>
+          <StatsCard
+            icon={<FlagIcon />}
+            label="Peso Inicial"
+            value={`${metrics.initial_weight ?? '-'} kg`}
+          />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard icon={<ScaleIcon />} label="Peso Atual" value={`${metrics.current_weight ?? '-'} kg`} />
+        <Grid item>
+          <StatsCard
+            icon={<ScaleIcon />}
+            label="Peso Atual"
+            value={`${metrics.current_weight ?? '-'} kg`}
+          />
         </Grid>
 
         <Grid item xs={12} md={8}>
-          <ChartCard data={history} activePeriod={period} onChangePeriod={setPeriod} />
+          <ChartCard
+            data={history}
+            activePeriod={period}
+            onChangePeriod={setPeriod}
+          />
         </Grid>
         <Grid item xs={12} md={4}>
           <ProgressCard

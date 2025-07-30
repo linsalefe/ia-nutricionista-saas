@@ -1,61 +1,56 @@
-// src/components/StatsCard.tsx
 import React from 'react';
 import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
-import { motion } from 'framer-motion';
 
 interface StatsCardProps {
   icon: React.ReactNode;
   label: string;
-  value: string | number;
+  value: string;
   highlight?: boolean;
 }
 
-export default function StatsCard({
-  icon,
-  label,
-  value,
-  highlight = false,
-}: StatsCardProps) {
+export default function StatsCard({ icon, label, value, highlight }: StatsCardProps) {
   const theme = useTheme();
   return (
-    <motion.div
-      whileHover={{ scale: 1.04, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+    <Card
+      sx={{
+        position: 'relative',
+        overflow: 'visible',
+        borderRadius: 3,
+        boxShadow: highlight
+          ? `0 4px 20px ${theme.palette.primary.dark}33`
+          : '0 2px 8px rgba(0,0,0,0.08)',
+        bgcolor: highlight ? theme.palette.primary.light : theme.palette.background.paper,
+      }}
     >
-      <Card
-        elevation={highlight ? 8 : 2}
-        sx={{
-          borderRadius: 3,
-          bgcolor: highlight ? theme.palette.secondary.main : theme.palette.grey[50],
-          color: highlight ? theme.palette.secondary.contrastText : theme.palette.text.primary,
-          position: 'relative',
-          overflow: 'visible',
-        }}
-      >
+      {highlight && (
         <Box
           sx={{
             position: 'absolute',
             top: -20,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            bgcolor: highlight ? theme.palette.secondary.main : theme.palette.primary.light,
+            left: 16,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
-            p: 1.5,
-            display: 'inline-flex',
-            boxShadow: theme.shadows[2],
+            bgcolor: theme.palette.primary.main,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           {icon}
         </Box>
-        <CardContent sx={{ pt: 4, textAlign: 'center' }}>
-          <Typography variant="subtitle2" gutterBottom>
-            {label}
-          </Typography>
-          <Typography variant="h6" fontWeight={600}>
-            {value}
-          </Typography>
-        </CardContent>
-      </Card>
-    </motion.div>
+      )}
+      <CardContent sx={{ textAlign: 'center', pt: highlight ? 3 : 2, pb: 3 }}>
+        {!highlight && (
+          <Box sx={{ mb: 1, color: theme.palette.primary.main }}>{icon}</Box>
+        )}
+        <Typography variant="subtitle2" color="text.secondary">
+          {label}
+        </Typography>
+        <Typography variant="h6" fontWeight={600} mt={0.5}>
+          {value}
+        </Typography>
+      </CardContent>
+    </Card>
   );
 }

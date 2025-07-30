@@ -1,4 +1,3 @@
-// src/layouts/MainLayout.tsx
 import React from 'react';
 import { Box, CssBaseline, Toolbar } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +7,17 @@ import { useLoading } from '../contexts/LoadingContext';
 import LinearProgress from '@mui/material/LinearProgress';
 import { useLocation } from 'react-router-dom';
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  mode: 'light' | 'dark';
+  onToggleMode: () => void;
+}
+
+export default function MainLayout({
+  children,
+  mode,
+  onToggleMode,
+}: MainLayoutProps) {
   const { loading } = useLoading();
   const location = useLocation();
 
@@ -16,22 +25,25 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f7fe' }}>
       <CssBaseline />
 
-      {/* Sidebar (estilo Materially) */}
-      <Sidebar />
+      {/* Sidebar */}
+      <Sidebar mode={mode} onToggleMode={onToggleMode} />
 
-      <Box component="main" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* Header fixo */}
-        <Header />
+      <Box
+        component="main"
+        sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}
+      >
+        {/* Header */}
+        <Header mode={mode} onToggleMode={onToggleMode} />
         <Toolbar sx={{ minHeight: 64 }} />
 
-        {/* Loading progress */}
+        {/* Loading bar */}
         {loading && (
           <LinearProgress
             sx={{ position: 'fixed', top: 64, left: 240, right: 0, zIndex: 1200 }}
           />
         )}
 
-        {/* Conteúdo com animação de transição */}
+        {/* Page content with transition */}
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -41,9 +53,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             transition={{ duration: 0.4 }}
             style={{ flex: 1, overflowY: 'auto' }}
           >
-            <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-              {children}
-            </Box>
+            <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>{children}</Box>
           </motion.div>
         </AnimatePresence>
       </Box>

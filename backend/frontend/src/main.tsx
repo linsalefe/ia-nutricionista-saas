@@ -1,4 +1,3 @@
-// src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import axios from 'axios';
@@ -23,7 +22,7 @@ axios.defaults.baseURL = 'http://localhost:8000';
 function ThemedApp() {
   const { mode } = useThemeMode();
   return (
-    <ThemeProvider theme={getTheme(mode)}>
+    <ThemeProvider theme={getTheme(mode as 'light' | 'dark')}>
       <CssBaseline />
       <App />
     </ThemeProvider>

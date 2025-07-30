@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from app.utils.metrics import compute_bmi, compute_progress
 
 load_dotenv()
 

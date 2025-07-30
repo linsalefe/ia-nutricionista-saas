@@ -6,6 +6,7 @@ import openai
 import os
 from dotenv import load_dotenv
 import base64
+from app.utils.metrics import compute_bmi, compute_progress
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
